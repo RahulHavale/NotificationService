@@ -1,6 +1,8 @@
 package com.example.NotificationService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,37 +15,43 @@ public class NotificationController {
     private final NotificationService service;
 
     @PostMapping
-    public void createNotification(
+    public ResponseEntity<NotificationResponse> createNotification(
             @RequestBody NotificationRequest request) {
 
-        service.createNotification(request);
+        NotificationResponse response =
+                service.createNotification(request);
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<NotificationResponse> getAllNotifications() {
+    public ResponseEntity<List<NotificationResponse>> getAllNotifications() {
 
-        return service.getAllNotifications();
+        return ResponseEntity.ok(service.getAllNotifications());
     }
 
     @GetMapping("/{id}")
-    public NotificationResponse getNotification(
+    public ResponseEntity<NotificationResponse> getNotification(
             @PathVariable Long id) {
 
-        return service.getNotification(id);
+        return ResponseEntity.ok(service.getNotification(id));
     }
 
     @PutMapping("/{id}")
-    public void updateNotification(
+    public ResponseEntity<NotificationResponse> updateNotification(
             @PathVariable Long id,
             @RequestBody NotificationRequest request) {
 
-        service.updateNotification(id, request);
+        return ResponseEntity.ok(
+                service.updateNotification(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteNotification(
+    public ResponseEntity<String> deleteNotification(
             @PathVariable Long id) {
 
         service.deleteNotification(id);
+
+        return ResponseEntity.ok("Notification deleted successfully.");
     }
 }

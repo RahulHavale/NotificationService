@@ -1,26 +1,23 @@
 package com.example.NotificationService;
 
+import com.example.NotificationService.NotificationNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.stereotype.Service;
-
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationServiceImpl
-        implements NotificationService {
+public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository repository;
-
     private final ModelMapper mapper;
 
     @Override
-    public void createNotification(NotificationRequest request) {
-
+    public NotificationResponse createNotification(NotificationRequest request) {
 
         NotificationEntity entity = new NotificationEntity();
 
@@ -34,13 +31,16 @@ public class NotificationServiceImpl
         entity.setUpdatedDate(LocalDate.now());
 
         repository.save(entity);
+
+        return mapper.map(entity, NotificationResponse.class);
     }
 
     @Override
     public List<NotificationResponse> getAllNotifications() {
 
         Type listType =
-                new TypeToken<List<NotificationResponse>>() {}.getType();
+                new TypeToken<List<NotificationResponse>>() {
+                }.getType();
 
         return mapper.map(repository.findAll(), listType);
     }
@@ -48,24 +48,22 @@ public class NotificationServiceImpl
     @Override
     public NotificationResponse getNotification(Long id) {
 
-        NotificationEntity entity =
-                repository.findById(id).orElse(null);
-
-        if (entity == null)
-            return null;
+        NotificationEntity entity = repository.findById(id)
+                .orElseThrow(() ->
+                        new NotificationNotFoundException(
+                                "Notification not found with id : " + id));
 
         return mapper.map(entity, NotificationResponse.class);
     }
 
     @Override
-    public void updateNotification(Long id,
-                                   NotificationRequest request) {
+    public NotificationResponse updateNotification(Long id,
+                                                   NotificationRequest request) {
 
-        NotificationEntity entity =
-                repository.findById(id).orElse(null);
-
-        if (entity == null)
-            return;
+        NotificationEntity entity = repository.findById(id)
+                .orElseThrow(() ->
+                        new NotificationNotFoundException(
+                                "Notification not found with id : " + id));
 
         entity.setOrderId(request.getOrderId());
         entity.setEmail(request.getEmail());
@@ -74,10 +72,17 @@ public class NotificationServiceImpl
         entity.setUpdatedDate(LocalDate.now());
 
         repository.save(entity);
+
+        return mapper.map(entity, NotificationResponse.class);
     }
 
     @Override
     public void deleteNotification(Long id) {
+
+        if (!repository.existsById(id)) {
+            throw new NotificationNotFoundException(
+                    "Notification not found with id : " + id);
+        }
 
         repository.deleteById(id);
     }
